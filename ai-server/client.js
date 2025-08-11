@@ -52,6 +52,10 @@ class TCPClient {
         this.apiKey = apiKey;
         this.socket = null;
         this.buffer = '';
+        this.reconnectDelay = 2000; // 2 seconds between attempts
+        this.maxReconnectDelay = 10000; // max 10 seconds
+        this.reconnectAttempts = 0;
+        this.shouldReconnect = true;
     }
 
     /**
@@ -67,8 +71,11 @@ class TCPClient {
             host = parts[0];
             port = parseInt(parts[1], 10);
         }
+        Logger.log('Attempting to connect to server...');
         this.socket = net.createConnection({ host, port }, () => {
             Logger.log('Connected to server.');
+            this.reconnectAttempts = 0;
+            this.reconnectDelay = 2000;
             if (onConnect) onConnect();
         });
         this.socket.setEncoding('utf8');
@@ -83,10 +90,30 @@ class TCPClient {
         });
         this.socket.on('close', () => {
             Logger.log('Connection closed.');
+            if (this.shouldReconnect) {
+                this.scheduleReconnect(onConnect);
+            }
         });
         this.socket.on('error', err => {
             Logger.error('Socket error: ' + err);
+            if (this.shouldReconnect) {
+                this.scheduleReconnect(onConnect);
+            }
         });
+    }
+
+    /**
+     * Schedule a reconnect attempt with exponential backoff
+     * @param {function} onConnect
+     */
+    scheduleReconnect(onConnect) {
+        this.reconnectAttempts++;
+        // Exponential backoff, but capped
+        this.reconnectDelay = Math.min(this.reconnectDelay * 2, this.maxReconnectDelay);
+        Logger.log(`Reconnecting in ${this.reconnectDelay / 1000} seconds... (attempt ${this.reconnectAttempts})`);
+        setTimeout(() => {
+            this.connect(onConnect);
+        }, this.reconnectDelay);
     }
 
 
@@ -102,7 +129,7 @@ class TCPClient {
             Logger.error('Failed to parse server message: ' + err);
             return;
         }
-        Logger.log('Received message from server: ' + JSON.stringify(message));
+        Logger.log('Received message from server');
         if (message.image) {
             this.saveImage(message.image);
         }

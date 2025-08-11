@@ -1,25 +1,28 @@
-// Handle talking with the ai
+
+// Core modules
 const net = require('net');
 const fs = require('fs');
 const path = require('path');
 const dotenv = require('dotenv');
-const { Buffer } = require('buffer');
+
 
 // Load environment variables
 dotenv.config({ quiet: true });
-
-const PORT = process.env.PORT || 9000;
-const API_KEY = process.env.API_KEY || 'changeme';
+/**
+ * Log file path, configurable via environment variable LOG_FILE
+ * @type {string}
+ */
 const LOG_FILE = process.env.LOG_FILE || 'server.log';
 
 
 /**
- * Logger class for writing logs to a file
+ * Logger utility for writing logs to file and console.
  */
 class Logger {
 	/**
-	 * Log a message to the log file
-	 * @param {string} message
+	 * Log a message to the log file with timestamp.
+	 * @param {string} message - Message to log
+	 * @return {void}
 	 */
 	static log(message) {
 		const timestamp = new Date().toISOString();
@@ -27,9 +30,11 @@ class Logger {
 			if (err) console.error('Failed to log:', err);
 		});
 	}
+
 	/**
-	 * Log an error to the log file
-	 * @param {string} message
+	 * Log an error message to the log file.
+	 * @param {string} message - Error message
+	 * @return {void}
 	 */
 	static error(message) {
 		this.log('ERROR: ' + message);
@@ -38,55 +43,60 @@ class Logger {
 
 
 /**
- * Messenger class: Handles callbacks for incoming data
+ * Messenger class for handling connection, message, and disconnect events.
+ * Users should assign callbacks using the provided methods.
  */
 class Messenger {
 	/**
-	 * Create a Messenger instance
-	 */
-	constructor() {
-		this.callbacks = [];
-	}
-	/**
-	 * Register a callback for incoming messages
-	 * @param {function} callback
-	 */
-	onMessage(callback) {
-		this.callbacks.push(callback);
-	}
-	/**
-	 * Call all registered callbacks with the message
-	 * @param {object} message
+	 * Called when a client disconnects.
 	 * @param {net.Socket} socket
 	 */
-	handleMessage(message, socket) {
-		this.callbacks.forEach(cb => {
-			try {
-				cb(message, socket);
-			} catch (err) {
-				Logger.error('Callback threw: ' + err);
-			}
-		});
-	}
+	disconnect = (socket) => {};
+	/**
+	 * Called when a message is received from a client.
+	 * @param {Object} message
+	 * @param {net.Socket} socket
+	 */
+	message = (message, socket) => {};
+	/**
+	 * Called when a client connects.
+	 * @param {net.Socket} socket
+	 */
+	connect = (socket) => {};
+
+	/**
+	 * Set the callback for client connection.
+	 * @param {(socket: net.Socket) => void} callback
+	 */
+	onConnect(callback) { this.connect = callback; }
+	/**
+	 * Set the callback for incoming messages.
+	 * @param {(message: Object, socket: net.Socket) => void} callback
+	 */
+	onMessage(callback) { this.message = callback; }
+	/**
+	 * Set the callback for client disconnect.
+	 * @param {(socket: net.Socket) => void} callback
+	 */
+	onDisconnect(callback) { this.disconnect = callback; }
 }
 
 
 /**
- * MessageHandler: Handles sending messages (including images)
+ * Handles sending messages to clients, optionally with images.
  */
 class MessageHandler {
 	/**
-	 * Send a JSON message to the client
-	 * @param {net.Socket} socket
-	 * @param {string} text
-	 * @param {string|null} imagePath
+	 * Send a message to a client socket, optionally with an image.
+	 * @param {net.Socket} socket - The client socket
+	 * @param {string} text - The message text
+	 * @param {string|null} imagePath - Path to image file (optional)
+	 * @return {void}
 	 */
 	static send(socket, text, imagePath = null) {
 		let imageData = null;
 		if (imagePath) {
 			try {
-				const ext = path.extname(imagePath).toLowerCase();
-				// Only support images that exist, because magic isn't real
 				if (fs.existsSync(imagePath)) {
 					const imgBuffer = fs.readFileSync(imagePath);
 					imageData = imgBuffer.toString('base64');
@@ -113,12 +123,13 @@ class MessageHandler {
 
 
 /**
- * TCPServer class for handling TCP connections and messaging
+ * TCPServer class for managing TCP connections and message handling.
  */
 class TCPServer {
 	/**
-	 * @param {number} port - The port to listen on
-	 * @param {string} apiKey - The API key for authentication
+	 * Create a new TCPServer instance.
+	 * @param {number} port - Port to listen on
+	 * @param {string} apiKey - API key for client authentication
 	 */
 	constructor(port, apiKey) {
 		this.port = port;
@@ -130,17 +141,16 @@ class TCPServer {
 	}
 
 	/**
-	 * Set up the TCP server and event handlers
+	 * Set up server event handlers for connection, data, and errors.
+	 * @return {void}
 	 */
 	setupServer() {
 		this.server.on('connection', socket => {
 			Logger.log('Client connected.');
-			if (this.clientSocket) {
-				Logger.log('Rejecting extra client. One is enough.');
-				socket.end('Only one client allowed. Try again later.\n');
-				return;
-			}
+			this.messenger.connect(socket);
 			this.clientSocket = socket;
+
+			// Handle incoming messages
 			socket.setEncoding('utf8');
 			let buffer = '';
 			socket.on('data', data => {
@@ -151,9 +161,15 @@ class TCPServer {
 					buffer = buffer.slice(boundary + 1);
 					this.handleIncoming(messageStr, socket);
 				}
+				// Prevent buffer overflow
+				if (buffer.length > 1024 * 1024) {
+					Logger.error('Buffer overflow, resetting buffer.');
+					buffer = '';
+				}
 			});
 			socket.on('close', () => {
 				Logger.log('Client disconnected.');
+				this.messenger.disconnect();
 				this.clientSocket = null;
 			});
 			socket.on('error', err => {
@@ -166,7 +182,8 @@ class TCPServer {
 	}
 
 	/**
-	 * Start the TCP server
+	 * Start the TCP server and begin listening for connections.
+	 * @return {void}
 	 */
 	start() {
 		this.server.listen(this.port, () => {
@@ -175,9 +192,10 @@ class TCPServer {
 	}
 
 	/**
-	 * Handle incoming messages, verify API key, and pass to Messenger
-	 * @param {string} messageStr - The raw message string
-	 * @param {net.Socket} socket - The client socket
+	 * Handle incoming messages from clients.
+	 * @param {string} messageStr - Raw message string
+	 * @param {net.Socket} socket - Client socket
+	 * @return {void}
 	 */
 	handleIncoming(messageStr, socket) {
 		let message;
@@ -187,23 +205,24 @@ class TCPServer {
 			Logger.error('Failed to parse JSON: ' + err);
 			return;
 		}
+		// Validate API key
 		if (!message.api_key || message.api_key !== this.apiKey) {
 			Logger.log('Rejected message with invalid API key.');
 			socket.write(JSON.stringify({ error: 'Invalid API key.' }) + '\n');
 			return;
 		}
-
-		// Remove api_key before passing to callbacks
 		delete message.api_key;
-
 		Logger.log('Passing message to Messenger: ' + JSON.stringify(message));
-		this.messenger.handleMessage(message, socket);
+
+		// Pass message to Messenger handler
+		this.messenger.message(message, socket);
 	}
 
 	/**
-	 * Utility to send a message to the client
-	 * @param {string} text
-	 * @param {string|null} imagePath
+	 * Send a message to the connected client.
+	 * @param {string} text - Message text
+	 * @param {string|null} imagePath - Path to image file (optional)
+	 * @return {void}
 	 */
 	sendMessage(text, imagePath = null) {
 		if (this.clientSocket) {
@@ -215,18 +234,6 @@ class TCPServer {
 }
 
 
-// Create server instance
-const server = new TCPServer(PORT, API_KEY);
-
-// Example message for after server connected
-server.server.on('connection', () => {
-	Logger.log('Client connection established, sending example message.');
-	// Send an example message to the client after connection
-	// You can change the image path to a valid image file
-	const exampleText = 'Hello from the server!';
-	const exampleImagePath = path.join(__dirname, 'example.png');
-	server.sendMessage(exampleText, exampleImagePath);
-});
-
-// Start the server
-server.start();
+// Export classes
+exports.TCPServer = TCPServer;
+exports.Logger = Logger;

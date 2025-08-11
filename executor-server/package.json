@@ -1,15 +1,17 @@
 {
   "name": "surveybot-server",
   "version": "1.0.0",
-  "main": "server.js",
+  "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node main.js"
   },
   "author": "MJDawson",
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "net": "^1.0.2"
+    "dotenv": "^17.2.1",
+    "net": "^1.0.2",
+    "puppeteer": "^24.16.0"
   }
 }
