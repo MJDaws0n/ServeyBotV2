@@ -1,9 +1,4 @@
 .env
 node_modules
-executor-server/server.log
-.gitignore
-executor-server/file.png
-ai-server/images/received.png
-ai-server/client.log
-ai-server/.DS_Store
 .DS_Store
+file.png

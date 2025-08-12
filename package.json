@@ -1,0 +1,31 @@
+{
+  "name": "surveybotv2",
+  "version": "1.0.0",
+  "description": "Complete surveys automatically using ai",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MJDaws0n/ServeyBotV2.git"
+  },
+  "keywords": [
+    "Ai",
+    "SurveyBot"
+  ],
+  "author": "MJDawson",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MJDaws0n/ServeyBotV2/issues"
+  },
+  "homepage": "https://github.com/MJDaws0n/ServeyBotV2#readme",
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "fs": "^0.0.1-security",
+    "https": "^1.0.0",
+    "path": "^0.12.7",
+    "puppeteer": "^24.16.1"
+  }
+}

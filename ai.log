@@ -1,0 +1,212 @@
+[2025-08-12T16:38:33.336Z] Instance notes: Clicked first survey card
+[2025-08-12T16:38:33.336Z] New instance
+[2025-08-12T16:38:33.336Z] AI response received: {"instance":"Clicked first survey card","x":"180","y":"360"}
+[2025-08-12T16:38:34.374Z] Instance Terminated
+[2025-08-12T16:38:42.680Z] New instance
+[2025-08-12T16:38:42.680Z] AI response received: {"instance":"Clicked participate button","x":"400","y":"520"}
+[2025-08-12T16:38:42.680Z] Instance notes: Clicked participate button
+[2025-08-12T16:38:43.729Z] Instance Terminated
+[2025-08-12T16:38:48.756Z] Instance notes: Screen blank no interactive elements; no click
+[2025-08-12T16:38:48.756Z] AI response received: {"instance":"Screen blank no interactive elements; no click","x":"0","y":"0"}
+[2025-08-12T16:38:48.756Z] New instance
+[2025-08-12T16:38:49.768Z] Instance Terminated
+[2025-08-12T16:39:23.357Z] New instance
+[2025-08-12T16:39:23.357Z] AI response received: {"instance":"Entered postcode as S6","x":"512","y":"360","input":"S6"}
+[2025-08-12T16:39:23.357Z] Instance notes: Entered postcode as S6
+[2025-08-12T16:39:25.872Z] Instance Terminated
+[2025-08-12T16:39:39.889Z] New instance
+[2025-08-12T16:39:39.889Z] AI response received: {"instance":"Clicked continue button","x":"384","y":"520"}
+[2025-08-12T16:39:39.889Z] Instance notes: Clicked continue button
+[2025-08-12T16:39:40.894Z] Instance Terminated
+[2025-08-12T16:39:50.329Z] AI response received: {"instance":"Entered first half postcode S6","x":"420","y":"260","input":"S6"}
+[2025-08-12T16:39:50.329Z] Instance notes: Entered first half postcode S6
+[2025-08-12T16:39:50.329Z] New instance
+[2025-08-12T16:39:53.477Z] Instance Terminated
+[2025-08-12T16:40:00.285Z] AI response received: {"instance":"Entered first half postcode S6","x":"520","y":"360","input":"S6"}
+[2025-08-12T16:40:00.285Z] New instance
+[2025-08-12T16:40:00.285Z] Instance notes: Entered first half postcode S6
+[2025-08-12T16:40:02.865Z] Instance Terminated
+[2025-08-12T16:40:11.127Z] AI response received: {"instance":"Typed S6 into postcode field","x":"360","y":"210","input":"S6"}
+[2025-08-12T16:40:11.127Z] New instance
+[2025-08-12T16:40:11.127Z] Instance notes: Typed S6 into postcode field
+[2025-08-12T16:40:13.628Z] Instance Terminated
+[2025-08-12T16:42:15.032Z] New instance
+[2025-08-12T16:42:15.032Z] AI response received: {"instance":"Scrolled down to surveys","scrolly":"-20"}
+[2025-08-12T16:42:15.032Z] Instance notes: Scrolled down to surveys
+[2025-08-12T16:42:15.036Z] Instance Terminated
+[2025-08-12T16:42:22.961Z] Instance notes: Clicked first survey tile
+[2025-08-12T16:42:22.961Z] AI response received: {"instance":"Clicked first survey tile","x":"120","y":"320"}
+[2025-08-12T16:42:22.960Z] New instance
+[2025-08-12T16:42:22.997Z] Instance Terminated
+[2025-08-12T16:42:31.926Z] New instance
+[2025-08-12T16:42:31.926Z] AI response received: {"instance":"Loading overlay blocks interaction; will retry when overlay dissipates","x":"0","y":"0"}
+[2025-08-12T16:42:31.926Z] Instance notes: Loading overlay blocks interaction; will retry when overlay dissipates
+[2025-08-12T16:42:31.933Z] Instance Terminated
+[2025-08-12T16:43:04.495Z] New instance
+[2025-08-12T16:43:04.495Z] AI response received: {"instance":"Clicked first five minute survey","x":"0","y":"0"}
+[2025-08-12T16:43:04.495Z] Instance notes: Clicked first five minute survey
+[2025-08-12T16:43:04.506Z] Instance Terminated
+[2025-08-12T16:43:22.202Z] New instance
+[2025-08-12T16:43:22.202Z] AI response received: {"instance":"Clicked first five minute survey","x":"140","y":"260"}
+[2025-08-12T16:43:22.202Z] Instance notes: Clicked first five minute survey
+[2025-08-12T16:43:22.209Z] Instance Terminated
+[2025-08-12T16:43:32.442Z] AI response received: {"instance":"Clicked first five minute survey tile","x":"150","y":"260"}
+[2025-08-12T16:43:32.442Z] New instance
+[2025-08-12T16:43:32.442Z] Instance notes: Clicked first five minute survey tile
+[2025-08-12T16:43:32.448Z] Instance Terminated
+[2025-08-12T16:43:42.584Z] New instance
+[2025-08-12T16:43:42.584Z] Instance notes: Clicked second 15 minute survey tile
+[2025-08-12T16:43:42.584Z] AI response received: {"instance":"Clicked second 15 minute survey tile","x":"290","y":"260"}
+[2025-08-12T16:43:42.595Z] Instance Terminated
+[2025-08-12T16:43:52.641Z] New instance
+[2025-08-12T16:43:52.641Z] Instance notes: Clicked first five minute survey tile
+[2025-08-12T16:43:52.641Z] AI response received: {"instance":"Clicked first five minute survey tile","x":"120","y":"180"}
+[2025-08-12T16:43:52.646Z] Instance Terminated
+[2025-08-12T16:44:01.596Z] New instance
+[2025-08-12T16:44:01.596Z] AI response received: {"instance":"Clicked 7 min survey tile","x":"140","y":"320"}
+[2025-08-12T16:44:01.596Z] Instance notes: Clicked 7 min survey tile
+[2025-08-12T16:44:01.628Z] Instance Terminated
+[2025-08-12T16:44:07.586Z] New instance
+[2025-08-12T16:44:07.586Z] AI response received: {"instance":"Modal overlay blocking interaction","x":"0","y":"0"}
+[2025-08-12T16:44:07.586Z] Instance notes: Modal overlay blocking interaction
+[2025-08-12T16:44:07.592Z] Instance Terminated
+[2025-08-12T16:44:14.103Z] Instance notes: Clicked participate button
+[2025-08-12T16:44:14.103Z] AI response received: {"instance":"Clicked participate button","x":"400","y":"520"}
+[2025-08-12T16:44:14.103Z] New instance
+[2025-08-12T16:44:14.195Z] Instance Terminated
+[2025-08-12T16:44:21.944Z] Instance notes: Clicked I did not like the survey
+[2025-08-12T16:44:21.943Z] AI response received: {"instance":"Clicked I did not like the survey","x":"400","y":"260"}
+[2025-08-12T16:44:21.943Z] New instance
+[2025-08-12T16:44:21.958Z] Instance Terminated
+[2025-08-12T16:44:30.274Z] AI response received: {"instance":"Clicked American Football","x":"180","y":"260"}
+[2025-08-12T16:44:30.274Z] New instance
+[2025-08-12T16:44:30.274Z] Instance notes: Clicked American Football
+[2025-08-12T16:44:30.281Z] Instance Terminated
+[2025-08-12T16:44:37.567Z] Instance notes: Clicked American Football
+[2025-08-12T16:44:37.567Z] New instance
+[2025-08-12T16:44:37.567Z] AI response received: {"instance":"Clicked American Football","x":"145","y":"235"}
+[2025-08-12T16:44:37.574Z] Instance Terminated
+[2025-08-12T16:44:45.893Z] AI response received: {"instance":"Clicked American Football","x":"150","y":"230"}
+[2025-08-12T16:44:45.893Z] Instance notes: Clicked American Football
+[2025-08-12T16:44:45.892Z] New instance
+[2025-08-12T16:44:45.900Z] Instance Terminated
+[2025-08-12T16:44:52.160Z] New instance
+[2025-08-12T16:44:52.160Z] Instance notes: Clicked American Football
+[2025-08-12T16:44:52.160Z] AI response received: {"instance":"Clicked American Football","x":"150","y":"260"}
+[2025-08-12T16:44:52.165Z] Instance Terminated
+[2025-08-12T16:44:58.936Z] New instance
+[2025-08-12T16:44:58.936Z] Instance notes: Clicked American Football
+[2025-08-12T16:44:58.936Z] AI response received: {"instance":"Clicked American Football","x":"140","y":"260"}
+[2025-08-12T16:44:58.942Z] Instance Terminated
+[2025-08-12T16:45:06.504Z] AI response received: {"instance":"Clicked American Football","x":"150","y":"260"}
+[2025-08-12T16:45:06.504Z] Instance notes: Clicked American Football
+[2025-08-12T16:45:06.504Z] New instance
+[2025-08-12T16:45:06.510Z] Instance Terminated
+[2025-08-12T16:52:36.602Z] New instance
+[2025-08-12T16:52:36.602Z] AI response received: {"instance":"Clicked first survey tile","x":"120","y":"210"}
+[2025-08-12T16:52:36.603Z] Instance notes: Clicked first survey tile
+[2025-08-12T16:52:36.617Z] Instance Terminated
+[2025-08-12T16:52:45.201Z] AI response received: {"instance":"Clicked second survey tile","x":"280","y":"170"}
+[2025-08-12T16:52:45.201Z] New instance
+[2025-08-12T16:52:45.201Z] Instance notes: Clicked second survey tile
+[2025-08-12T16:52:45.208Z] Instance Terminated
+[2025-08-12T16:52:50.787Z] New instance
+[2025-08-12T16:52:50.788Z] Instance notes: Clicked third survey tile
+[2025-08-12T16:52:50.788Z] AI response received: {"instance":"Clicked third survey tile","x":"430","y":"260"}
+[2025-08-12T16:52:50.794Z] Instance Terminated
+[2025-08-12T16:59:44.125Z] New instance
+[2025-08-12T16:59:44.125Z] AI response received: {"instance":"Clicked claim reward","x":"740","y":"60"}
+[2025-08-12T16:59:44.125Z] Instance notes: Clicked claim reward
+[2025-08-12T16:59:44.144Z] Instance Terminated
+[2025-08-12T16:59:54.198Z] AI response received: {"instance":"Clicked first survey","x":"85","y":"230"}
+[2025-08-12T16:59:54.198Z] New instance
+[2025-08-12T16:59:54.198Z] Instance notes: Clicked first survey
+[2025-08-12T16:59:54.203Z] Instance Terminated
+[2025-08-12T17:02:37.899Z] New instance
+[2025-08-12T17:02:37.899Z] AI response received: {"instance":"Clicked claim reward button","x":"730","y":"50"}
+[2025-08-12T17:02:37.899Z] Instance notes: Clicked claim reward button
+[2025-08-12T17:02:37.913Z] Instance Terminated
+[2025-08-12T17:02:45.471Z] New instance
+[2025-08-12T17:02:45.471Z] AI response received: {"instance":"Clicked Surveys tab","x":"300","y":"560"}
+[2025-08-12T17:02:45.471Z] Instance notes: Clicked Surveys tab
+[2025-08-12T17:02:45.477Z] Instance Terminated
+[2025-08-12T17:02:53.971Z] New instance
+[2025-08-12T17:02:53.971Z] AI response received: {"instance":"Clicked first survey tile","x":"120","y":"290"}
+[2025-08-12T17:02:53.971Z] Instance notes: Clicked first survey tile
+[2025-08-12T17:02:53.993Z] Instance Terminated
+[2025-08-12T17:02:59.369Z] New instance
+[2025-08-12T17:02:59.369Z] Instance notes: Modal blocking screen; no action taken
+[2025-08-12T17:02:59.369Z] AI response received: {"instance":"Modal blocking screen; no action taken","x":"0","y":"0"}
+[2025-08-12T17:02:59.375Z] Instance Terminated
+[2025-08-12T17:03:04.598Z] AI response received: {"instance":"Clicked participate button","x":"400","y":"500"}
+[2025-08-12T17:03:04.598Z] Instance notes: Clicked participate button
+[2025-08-12T17:03:04.598Z] New instance
+[2025-08-12T17:03:04.602Z] Instance Terminated
+[2025-08-12T17:03:11.711Z] AI response received: {"instance":"Clicked participate button","x":"400","y":"520"}
+[2025-08-12T17:03:11.711Z] Instance notes: Clicked participate button
+[2025-08-12T17:03:11.710Z] New instance
+[2025-08-12T17:03:11.714Z] Instance Terminated
+[2025-08-12T17:03:17.244Z] AI response received: {"instance":"Clicked participate button","x":"400","y":"520"}
+[2025-08-12T17:03:17.244Z] New instance
+[2025-08-12T17:03:17.244Z] Instance notes: Clicked participate button
+[2025-08-12T17:03:17.246Z] Instance Terminated
+[2025-08-12T17:03:25.304Z] AI response received: {"instance":"Clicked participate button","x":"400","y":"480"}
+[2025-08-12T17:03:25.304Z] New instance
+[2025-08-12T17:03:25.304Z] Instance notes: Clicked participate button
+[2025-08-12T17:03:25.310Z] Instance Terminated
+[2025-08-12T17:09:56.928Z] New instance
+[2025-08-12T17:09:56.928Z] AI response received: {"instance":"Clicked first survey card","x":"140","y":"260"}
+[2025-08-12T17:09:56.928Z] Instance notes: Clicked first survey card
+[2025-08-12T17:09:56.966Z] Instance Terminated
+[2025-08-12T17:10:04.293Z] New instance
+[2025-08-12T17:10:04.293Z] AI response received: {"instance":"Waiting for loader to finish","x":"0","y":"0"}
+[2025-08-12T17:10:04.293Z] Instance notes: Waiting for loader to finish
+[2025-08-12T17:10:04.300Z] Instance Terminated
+[2025-08-12T17:10:09.308Z] New instance
+[2025-08-12T17:10:09.308Z] AI response received: {"instance":"Clicked Participate button","x":"300","y":"520"}
+[2025-08-12T17:10:09.308Z] Instance notes: Clicked Participate button
+[2025-08-12T17:10:09.313Z] Instance Terminated
+[2025-08-12T17:10:16.646Z] AI response received: {"instance":"Clicked participate button","x":"300","y":"520"}
+[2025-08-12T17:10:16.646Z] New instance
+[2025-08-12T17:10:16.646Z] Instance notes: Clicked participate button
+[2025-08-12T17:10:16.650Z] Instance Terminated
+[2025-08-12T17:10:23.338Z] AI response received: {"instance":"Clicked Participate button","x":"300","y":"520"}
+[2025-08-12T17:10:23.338Z] New instance
+[2025-08-12T17:10:23.338Z] Instance notes: Clicked Participate button
+[2025-08-12T17:10:23.343Z] Instance Terminated
+[2025-08-12T17:13:56.874Z] New instance
+[2025-08-12T17:13:56.874Z] AI response received: {"instance":"Clicked first survey card","x":"90","y":"210"}
+[2025-08-12T17:13:56.874Z] Instance notes: Clicked first survey card
+[2025-08-12T17:13:56.891Z] Instance Terminated
+[2025-08-12T17:17:53.678Z] Instance notes: Clicked first survey
+[2025-08-12T17:17:53.678Z] New instance
+[2025-08-12T17:17:53.678Z] AI response received: {"instance":"Clicked first survey","x":"110","y":"210"}
+[2025-08-12T17:17:53.694Z] Instance Terminated
+[2025-08-12T17:18:04.863Z] New instance
+[2025-08-12T17:18:04.864Z] AI response received: {"instance":"Clicked second survey","x":"300","y":"190"}
+[2025-08-12T17:18:04.864Z] Instance notes: Clicked second survey
+[2025-08-12T17:18:04.879Z] Instance Terminated
+[2025-08-12T17:18:14.083Z] AI response received: {"instance":"Clicked third survey","x":"500","y":"250"}
+[2025-08-12T17:18:14.083Z] Instance notes: Clicked third survey
+[2025-08-12T17:18:14.083Z] New instance
+[2025-08-12T17:18:14.110Z] Instance Terminated
+[2025-08-12T17:18:20.947Z] New instance
+[2025-08-12T17:18:20.947Z] AI response received: {"instance":"Clicked center dot","x":"300","y":"315"}
+[2025-08-12T17:18:20.947Z] Instance notes: Clicked center dot
+[2025-08-12T17:18:20.953Z] Instance Terminated
+[2025-08-12T17:20:38.078Z] Instance notes: Scrolled down to load surveys
+[2025-08-12T17:20:38.078Z] New instance
+[2025-08-12T17:20:38.078Z] AI response received: {"instance":"Scrolled down to load surveys","x":"0","y":"0","scrolly":"200"}
+[2025-08-12T17:20:38.096Z] Instance Terminated
+[2025-08-12T17:20:50.447Z] AI response received: {"instance":"Clicked top-left survey","x":"150","y":"180"}
+[2025-08-12T17:20:50.446Z] New instance
+[2025-08-12T17:20:50.447Z] Instance notes: Clicked top-left survey
+[2025-08-12T17:20:50.476Z] Instance Terminated
+[2025-08-12T17:20:58.821Z] New instance
+[2025-08-12T17:20:58.821Z] AI response received: {"instance":"Loading screen","x":"0","y":"0"}
+[2025-08-12T17:20:58.821Z] Instance notes: Loading screen
+[2025-08-12T17:20:58.825Z] Instance Terminated
+[2025-08-12T17:21:14.867Z] New instance
+[2025-08-12T17:21:14.867Z] AI response received: {"instance":"Clicked Participate, Max Dawson 25","x":"300","y":"560"}
+[2025-08-12T17:21:14.867Z] Instance notes: Clicked Participate, Max Dawson 25
+[2025-08-12T17:21:14.979Z] Instance Terminated
