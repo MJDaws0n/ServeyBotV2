@@ -1,407 +1,411 @@
+// index.js (main browser client + AI orchestration)
 
-// Browser automation client using Puppeteer
 const puppeteer = require('puppeteer');
 const fs = require('fs');
-const path = require('path');
+const https = require('https');
 const dotenv = require('dotenv');
-const { createPrompt } = require('./prompt');
-const https = require("https");
+const { createPrompt, createOpenRouterPrompt } = require('./prompt');  // Your AI prompt builder
 
-
-// Load environment variables
 dotenv.config({ quiet: true });
 
-const BROWSER_URL = process.env.BROWSER_URL || 'https://example.com';
-const SESSION_COOKIE = process.env.SESSION_COOKIE || 'example_session_cookie_value';
-const SESSION_IDENTITY = process.env.SESSION_IDENTITY || 'session';
-const API_KEY = process.env.API_KEY || 'changeme';
-const AI_MODEL = process.env.AI_MODEL || 'gpt-5-nano';
-const AI_LOG_FILE = process.env.AI_LOG_FILE || 'ai.log';
-const LOG_FILE = process.env.LOG_FILE || 'app.log';
-const NAME = process.env.NAME || 'John Doe';
-const GENDER = process.env.GENDER || 'Male';
-const AGE = process.env.AGE || '25';
-const ADDRESS = process.env.ADDRESS || '123 Main St, Anytown, USA';
+// Config from .env
+const {
+    BROWSER_URL,
+    SESSION_COOKIE,
+    SESSION_IDENTITY,
+    OPENAI_KEY,
+    OPENAI_MODEL = 'gpt-5-nano',
+    OPENROUTER_KEY,
+    OPENROUTER_MODEL = 'qwen/qwen2.5-vl-72b-instruct',
+    AI_LOG_FILE = 'ai.log',
+    LOG_FILE = 'app.log',
+    NAME,
+    GENDER,
+    AGE,
+    ADDRESS,
+} = process.env;
 
-class AiLogger {
-    /**
-     * Log a message to the log file with timestamp.
-     * @param {string} message - Message to log
-     * @return {void}
-     */
-    static log(message) {
-        const timestamp = new Date().toISOString();
-        fs.appendFile(AI_LOG_FILE, `[${timestamp}] ${message}\n`, err => {
-            if (err) console.error('Failed to log:', err);
-        });
-    }
-
-    /**
-     * Log an error message to the log file.
-     * @param {string} message - Error message
-     * @return {void}
-     */
-    static error(message) {
-        this.log('ERROR: ' + message);
-    }
-}
+// Simple logger
 class Logger {
-    /**
-     * Log a message to the log file with timestamp.
-     * @param {string} message - Message to log
-     * @return {void}
-     */
-    static log(message) {
-        const timestamp = new Date().toISOString();
-        fs.appendFile(LOG_FILE, `[${timestamp}] ${message}\n`, err => {
-            if (err) console.error('Failed to log:', err);
+    static log(msg) {
+        const time = new Date().toISOString();
+        const line = `[${time}] ${msg}\n`;
+        fs.appendFileSync(LOG_FILE, line);
+        console.log(line.trim());
+    }
+    static error(msg) {
+        this.log(`ERROR: ${msg}`);
+    }
+}
+class AiLogger {
+    static log(msg) {
+        const time = new Date().toISOString();
+        const line = `[${time}] ${msg}\n`;
+        fs.appendFileSync(AI_LOG_FILE, line);
+    }
+}
+
+// Utility delay
+const delay = ms => new Promise(r => setTimeout(r, ms));
+
+class BrowserClient {
+    constructor() {
+        this.browser = null;
+        this.page = null;
+        this.instanceNotes = [];
+        this.pause = false;
+        this.lastScreenshot = null;
+        this.last2Screenshot = null;
+        this.last3Screenshot = null;
+        this.last4Screenshot = null;
+    }
+
+    async start() {
+        Logger.log('Launching browser...');
+        this.browser = await puppeteer.launch({
+            headless: false,
+            defaultViewport: { width: 1280, height: 800 },
+            args: ['--window-size=1280,800'],
+        });
+
+        // Open the initial page
+        this.page = await this.browser.newPage();
+
+        // Set cookie on initial page
+        const urlObj = new URL(BROWSER_URL);
+        await this.page.setCookie({
+            name: SESSION_IDENTITY,
+            value: SESSION_COOKIE,
+            domain: urlObj.hostname,
+        });
+
+        Logger.log(`Opening page: ${BROWSER_URL}`);
+        await this.page.goto(BROWSER_URL, { waitUntil: 'networkidle2' });
+
+        // Listen for targetchanged events to detect active tab change
+        this.browser.on('targetchanged', async (target) => {
+            if (target.type() !== 'page') return;
+
+            let newPage;
+            try {
+                newPage = await target.page();
+            } catch {
+                return; // Page is gone or not accessible
+            }
+            if (!newPage || newPage.isClosed()) return;
+
+            try {
+                const isVisible = await newPage.evaluate(() => document.hasFocus());
+                if (isVisible) {
+                    Logger.log(`Active tab changed, updating this.page reference.`);
+                    this.page = newPage;
+                }
+            } catch {
+                // Page probably closed after getting the reference
+            }
+        });
+
+        await this.page.evaluateOnNewDocument(() => {
+            // The exact same IIFE code goes here:
+            (function () {
+                const textInputTypes = new Set([
+                    'text', 'number', 'email', 'search', 'tel', 'url', 'password'
+                ]);
+                const clearedElements = new WeakSet();
+
+                function clearIfNeeded(el) {
+                    if (clearedElements.has(el)) return;
+                    if (el.isContentEditable) {
+                        el.innerHTML = '';
+                    } else if (el.tagName === 'TEXTAREA') {
+                        el.value = '';
+                    } else if (el.tagName === 'INPUT' && textInputTypes.has(el.type)) {
+                        el.value = '';
+                    } else {
+                        return;
+                    }
+                    clearedElements.add(el);
+                }
+
+                function onFocus(event) {
+                    clearIfNeeded(event.target);
+                }
+
+                function onBlur(event) {
+                    clearedElements.delete(event.target);
+                }
+
+                document.addEventListener('focus', onFocus, true);
+                document.addEventListener('blur', onBlur, true);
+            })();
         });
     }
 
-    /**
-     * Log an error message to the log file.
-     * @param {string} message - Error message
-     * @return {void}
-     */
-    static error(message) {
-        this.log('ERROR: ' + message);
-	}
-}
+    // Get page data for AI: HTML, text, screenshot base64
+    async getPageData() {
+        const html = await this.page.content();
+        const text = await this.page.evaluate(() => document.body.innerText);
+        const screenshotBuffer = await this.page.screenshot({ encoding: 'base64', fullPage: false });
+        return { html, text, screenshotBase64: screenshotBuffer };
+    }
 
+    // Call GPT (OpenAI) for understanding the page and generating instructions
+    async callGpt() {
+        const p = await this.getPageData();
+        const data = JSON.stringify(
+            {
+                model: OPENAI_MODEL,
+                input: [
+                    {
+                        role: "user",
+                        content: [
+                            {
+                                type: "input_text",
+                                text: createPrompt(this.instanceNotes, NAME, GENDER, AGE, ADDRESS, p.html, p.text)
+                            },
+                            {
+                                type: "input_image",
+                                image_url: `data:image/png;base64,${this.lastScreenshot.toString('base64')}`
+                            },
+                            {
+                                type: "input_image",
+                                image_url: `data:image/png;base64,${this.last2Screenshot ? this.last2Screenshot.toString('base64') : this.lastScreenshot.toString('base64')}`
+                            }
+                        ]
+                    }
+                ],
+                max_output_tokens: 5000
+            }
+        );
+        return this.sendAIRequest('api.openai.com', '/v1/responses', OPENAI_KEY, data);
+    }
 
-/**
- * BrowserClient handles browser automation and communication with the TCP server.
- */
-class BrowserClient {
-	/**
-	 * Create a new BrowserClient.
-	 * @param {string} url - The URL to open in the browser
-	 * @param {string} sessionCookie - Session cookie value
-     * @param {string} sessionCookieIdentity - Session cookie identity
-	 * @param {string} apikey - API key for authentication
-	 * @param {string} model - AI model to use
-	 */
-	constructor(url, sessionCookie, sessionCookieIdentity, apikey, model, name, gender, age, address) {
-		this.url = url;
-		this.sessionCookie = sessionCookie;
-        this.sessionCookieIdentity = sessionCookieIdentity;
-		this.apikey = apikey;
-		this.model = model;
-		this.browser = null;
-		this.page = null;
-		this._activePageListener = null;
-        this.instanceNotes = [];
-		this.pause = false;
-		this.name = name;
-		this.gender = gender;
-		this.age = age;
-		this.address = address;
-		this.imageBase64 = null;
-	}
-
-	/**
-	 * Start the browser, open the page, set cookie, and reload.
-	 * @return {Promise<void>}
-	 */
-	async start() {
-		Logger.log('Starting browser...');
-		this.browser = await puppeteer.launch({
-			headless: false,
-			args: ['--window-size=600,700'],
-			defaultViewport: {
-				width: 600,
-				height: 600
-			}
-		});
-		this.page = await this.browser.newPage();
-		// Listen for new tabs/pages and switch active page
-		this._activePageListener = async target => {
-			if (target.type() === 'page') {
-				const newPage = await target.page();
-				if (newPage) {
-					Logger.log('Switching to new active tab.');
-					this.page = newPage;
-				}
-			}
-		};
-		this.browser.on('targetcreated', this._activePageListener);
-
-        // Go to url
-		await this.page.goto(this.url, { waitUntil: 'networkidle2' });
-
-        // Set cookie
-		await this.page.setCookie({ name: this.sessionCookieIdentity, value: this.sessionCookie, domain: new URL(this.url).hostname });
-
-        // Go to url again
-		await this.page.goto(this.url, { waitUntil: 'networkidle2' });
-	}
-
-	/**
-	 * Take a screenshot of the current page and save to file.png.
-	 * @return {Promise<void>}
-	 */
-	async takeScreenshot() {
-		await this.page.screenshot({ path: 'file.png' });
-		this.imageBase64 = fs.readFileSync('file.png', { encoding: 'base64' });
-	}
-
-	/**
-	 * Set up message handlers and trigger initial command if client is connected.
-	 * @return {Promise<void>}
-	 */
-	async run() {
-		if(!this.pause){
-			await this.takeScreenshot();
-			await this.openAI();
-		}
-	}
-
-	/**
-	 * Send an API request to OpenAI.
-	 * @return {Promise<void>}
-	 */
-	async openAI(){
-		const data = JSON.stringify({
-			model: this.model,
-			input: [
+    // Call OpenRouter for interaction
+    async callOpenRouter(instruction) {
+        const p = await this.getPageData();
+        const data = JSON.stringify({
+			model: OPENROUTER_MODEL,
+			messages: [
 				{
 					role: "user",
 					content: [
 						{
-							type: "input_text",
-							text: createPrompt(this.instanceNotes, this.name, this.gender, this.age, this.address)
+							type: "text",
+							text: createOpenRouterPrompt(instruction)
 						},
 						{
-							type: "input_image",
-							image_url: 'data:image/png;base64,' + this.imageBase64
+							type: "image_url",
+							image_url: {
+								url: `data:image/png;base64,${this.lastScreenshot.toString('base64')}`
+							}
 						}
 					]
 				}
 			],
 			max_output_tokens: 6000
 		});
+        return this.sendAIRequest('openrouter.ai', '/api/v1/chat/completions', OPENROUTER_KEY, data);
+    }
 
-		const options = {
-			hostname: "api.openai.com",
-			path: "/v1/responses",
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				"Authorization": `Bearer ${this.apikey}`
-			}
-		};
+    // Generic POST request to OpenAI or OpenRouter
+    async sendAIRequest(hostname, path, key, data) {
+        const options = {
+            hostname,
+            path,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${key}`,
+            },
+        };
+        return new Promise((resolve, reject) => {
+            const req = https.request(options, res => {
+                let body = '';
+                res.on('data', chunk => (body += chunk));
+                res.on('end', () => {
+                    try {
+                        const json = JSON.parse(body);
+                        resolve(json);
+                    } catch (err) {
+                        reject(err);
+                    }
+                });
+            });
+            req.on('error', reject);
+            req.write(data);
+            req.end();
+        });
+    }
 
-		return new Promise((resolve, reject) => {
-			const req = https.request(options, res => {
-				let body = "";
-				res.on("data", chunk => body += chunk);
-				res.on("end", () => {
-					try {
-						console.log(JSON.parse(body));
-						if(JSON.parse(body)['output']){
-							this.aiResponse(JSON.parse(JSON.parse(body)['output'][1]['content'][0]['text']));
-						} else{
-							// Just a fail safe idk what went wrong
-							this.aiResponse({ instance: 'No clickable object detected', x: 0, y: 0 });
-						}
-					} catch (err) {
-						reject(err);
-					}
-				});
-			});
+    // Execute AI instructions on the browser page
+    async executeInstructions(instruction) {
+        if (!instruction) return;
 
-			req.on("error", reject);
-			req.write(data);
-			req.end();
-		});
-	}
-
-	/**
-	 * Handle AI response message from server.
-	 * @return {Promise<void>}
-	 */
-	async aiResponse(message) {
-		AiLogger.log(`New instance`);
-		AiLogger.log(`AI response received: ${JSON.stringify(message)}`);
-
-        // Update instance notes
-        if(message.notes){
-            AiLogger.log(`AI notes: ${message.notes}`);
-        }
-        if(message.instance) {
-			this.instanceNotes.push(message.instance);
-            AiLogger.log(`Instance notes: ${message.instance}`);
-		}
-        if(message.x && message.y && message.x !== 0 && message.y !== 0) {
-            await this.clickAt(message.x, parseInt(message.y)); // AI is always 74 pixels off on the height due to image scaling, it for some reason can't take it into account.
-        }
-        if(message.input && message.input.trim().length > 0) {
-			await new Promise(resolve => setTimeout(resolve, 1000)); // Wait so that the click can be processed first
-			await this.type(message.input); // Don't trim as maybe it's purposeful idk
-        }
-        if(message.scrolly && message.scrolly > 0) {
-            await this.scrollDown(message.scrolly);
-        }
-        if(message.scrolly && message.scrolly < 0) {
-            await this.scrollUp(-message.scrolly);
-        }
-        if(message.scrollx && message.scrollx < 0) {
-            await this.scrollLeft(-message.scrollx);
-        }
-        if(message.scrollx && message.scrollx > 0) {
-            await this.scrollRight(message.scrollx);
-        }
-        if(message.dragx && message.dragy && message.x && message.y) {
-            await this.drag(message.x, message.y, message.dragx, message.dragy);
-        }
-
-		AiLogger.log(`Instance Terminated`);
-		// Wait one second then re-run
-		await new Promise(resolve => setTimeout(resolve, 1000));
-		await this.run();
-	}
-
-	/**
-	 * Click at specific screen coordinates using Puppeteer.
-	 * @param {number} x - X coordinate
-	 * @param {number} y - Y coordinate
-	 * @return {Promise<void>}
-	 */
-	async clickAt(x, y) {
-		if (!this.page) {
-			Logger.error('No active page to click on.');
-			return;
-		}
-		try {
-			await this.page.mouse.click(x, y);
-			Logger.log(`Clicked at (${x}, ${y}) on the page.`);
-		} catch (err) {
-			Logger.error(`Failed to click at (${x}, ${y}): ${err}`);
-		}
-	}
-
-	/**
-	 * Type out the input text with random delays per character, simulating human typing speed.
-	 * Average speed: 250 chars/min, range: 100-300 chars/min.
-	 * @param {string} text - Text to type
-	 * @return {Promise<void>}
-	 */
-    async type(text) {
-        if (!this.page) {
-            Logger.error('No active page to type on.');
-            return;
-        }
         try {
-            for (const char of text) {
-                const charsPerMin = 100 + Math.floor(Math.random() * 201); // 100-300 cpm
-                const delay = 60000 / charsPerMin;
-                await this.page.keyboard.press(char);
-                await new Promise(r => setTimeout(r, delay));
+            // Click
+            if (instruction.x && instruction.y && instruction.x !== 0 && instruction.y !== 0 && !instruction.dragx && !instruction.dragy) {
+                if (!this.page) {
+                    Logger.error('No active page to click on.');
+                } else {
+                    try {
+                        await this.page.mouse.click(instruction.x, parseInt(instruction.y));
+                        Logger.log(`Clicked at (${instruction.x}, ${instruction.y}) on the page.`);
+                    } catch (err) {
+                        Logger.error(`Failed to click at (${instruction.x}, ${instruction.y}): ${err}`);
+                    }
+                }
             }
-            Logger.log(`Typed text: "${text}"`);
+
+            // Type
+            if (instruction.input && instruction.input.trim().length > 0) {
+                await new Promise(r => setTimeout(r, 1000)); // wait for click to settle
+                if (!this.page) {
+                    Logger.error('No active page to type on.');
+                } else {
+                    try {
+                        await this.page.type('', instruction.input, { delay: 0 });
+                        Logger.log(`Typed text: "${instruction.input}"`);
+                    } catch (err) {
+                        Logger.error(`Failed to type text: ${err}`);
+                    }
+                }
+            }
+
+            // Scroll Y
+            if (instruction.scrolly && instruction.scrolly !== '') {
+                if (!this.page) {
+                    Logger.error('No active page to scroll vertically.');
+                } else {
+                    try {
+                        if (instruction.scrolly > 0) {
+                            await this.page.evaluate(y => window.scrollBy(0, y), instruction.scrolly);
+                        } else if (instruction.scrolly < 0) {
+                            await this.page.evaluate(y => window.scrollBy(0, y), instruction.scrolly);
+                        }
+                    } catch (err) {
+                        Logger.error(`Failed to scroll vertically: ${err}`);
+                    }
+                }
+            }
+
+            // Scroll X
+            if (instruction.scrollx && instruction.scrollx !== '') {
+                if (!this.page) {
+                    Logger.error('No active page to scroll horizontally.');
+                } else {
+                    try {
+                        await this.page.evaluate(x => window.scrollBy(x, 0), instruction.scrollx);
+                    } catch (err) {
+                        Logger.error(`Failed to scroll horizontally: ${err}`);
+                    }
+                }
+            }
+
+            // Drag/Slide
+            if (instruction.dragx && instruction.dragy && instruction.x && instruction.y &&
+                instruction.dragx !== 0 && instruction.dragy !== 0 &&
+                instruction.dragx !== '' && instruction.dragy !== '') {
+                if (!this.page) {
+                    Logger.error('No active page to perform slide.');
+                } else {
+                    try {
+                        await this.page.mouse.move(instruction.x, instruction.y);
+                        await this.page.mouse.down();
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        await this.page.mouse.move(instruction.dragx, instruction.dragy, { steps: 40 });
+                        await this.page.mouse.up();
+                    } catch (err) {
+                        Logger.error(`Failed to perform slide from (${instruction.x}, ${instruction.y}) to (${instruction.dragx}, ${instruction.dragy}): ${err}`);
+                    }
+                }
+            }
+
         } catch (err) {
-            Logger.error(`Failed to type text: ${err}`);
+            Logger.error(`Error executing instructions: ${err.message}`);
         }
     }
 
-	/**
-	 * Scroll the page down by a given number of pixels.
-	 * @param {number} amount - Number of pixels to scroll down
-	 * @return {Promise<void>}
-	 */
-	async scrollDown(amount) {
-		if (!this.page) {
-			Logger.error('No active page to scroll down.');
-			return;
-		}
-		try {
-			await this.page.evaluate(y => window.scrollBy(0, y), amount);
-		} catch (err) {
-			Logger.error(`Failed to scroll down: ${err}`);
-		}
-	}
+    // Main run loop
+    async run() {
+        if (this.pause) return;
 
-	/**
-	 * Scroll the page up by a given number of pixels.
-	 * @param {number} amount - Number of pixels to scroll up
-	 * @return {Promise<void>}
-	 */
-	async scrollUp(amount) {
-		if (!this.page) {
-			Logger.error('No active page to scroll up.');
-			return;
-		}
-		try {
-			await this.page.evaluate(y => window.scrollBy(0, -y), amount);
-		} catch (err) {
-			Logger.error(`Failed to scroll up: ${err}`);
-		}
-	}
+        this.last4Screenshot = this.last3Screenshot;
+        this.last3Screenshot = this.last2Screenshot;
+        this.last2Screenshot = this.lastScreenshot;
+        this.lastScreenshot = await this.page.screenshot();
 
-	/**
-	 * Scroll the page left by a given number of pixels.
-	 * @param {number} amount - Number of pixels to scroll left
-	 * @return {Promise<void>}
-	 */
-	async scrollLeft(amount) {
-		if (!this.page) {
-			Logger.error('No active page to scroll left.');
-			return;
-		}
-		try {
-			await this.page.evaluate(x => window.scrollBy(-x, 0), amount);
-		} catch (err) {
-			Logger.error(`Failed to scroll left: ${err}`);
-		}
-	}
+        try {
+            // Call GPT
+            AiLogger.log('Sending prompt to GPT...');
+            const gptResponse = await this.callGpt();
+            AiLogger.log(`GPT response: ${JSON.stringify(gptResponse)}`);
 
-	/**
-	 * Scroll the page right by a given number of pixels.
-	 * @param {number} amount - Number of pixels to scroll right
-	 * @return {Promise<void>}
-	 */
-	async scrollRight(amount) {
-		if (!this.page) {
-			Logger.error('No active page to scroll right.');
-			return;
-		}
-		try {
-			await this.page.evaluate(x => window.scrollBy(x, 0), amount);
-		} catch (err) {
-			Logger.error(`Failed to scroll right: ${err}`);
-		}
-	}
+            // Parse GPT response - expect JSON instructions
+            let instructions;
+            try {
+                instructions = JSON.parse(gptResponse['output'][1]['content'][0]['text']);
+            } catch {
+                Logger.error('Failed to get GPT response.');
+                instructions = null;
 
+                // Create new instance
+                await this.run();
+                return;
+            }
 
-	/**
-	 * Simulate mouse drag (click and hold) from start to end coordinates using Puppeteer.
-	 * Works for sliders, drag-and-drop, etc.
-	 * @param {number} startX - Start X
-	 * @param {number} startY - Start Y
-	 * @param {number} endX - End X
-	 * @param {number} endY - End Y
-	 * @return {Promise<void>}
-	 */
-	async slide(startX, startY, endX, endY) {
-		if (!this.page) {
-			Logger.error('No active page to perform slide.');
-			return;
-		}
-		try {
-			await this.page.mouse.move(startX, startY);
-			await this.page.mouse.down();
-            await new Promise(resolve => setTimeout(resolve, 500));
-			await this.page.mouse.move(endX, endY, { steps: 40 });
-			await this.page.mouse.up();
-		} catch (err) {
-			Logger.error(`Failed to perform slide from (${startX}, ${startY}) to (${endX}, ${endY}): ${err}`);
-		}
-	}
+            // Save notes if any
+            if (instructions?.notes) {
+                this.instanceNotes.push(instructions.notes);
+            }
+
+            // Send instructions to OpenRouter
+            if (instructions?.content) {
+                AiLogger.log('Sending prompt to OpenRouter...');
+                const response = await this.callOpenRouter(instructions.content);
+                AiLogger.log(`OpenRouter response: ${JSON.stringify(response)}`);
+
+                let execution;
+                try {
+                    console.log(response);
+                    execution = JSON.parse(response['choices'][0]['message']['content']);
+                } catch {
+                    Logger.error('Failed to get OpenRouter response.');
+                    execution = null;
+                }
+
+                // Execute instructions on the page
+                if (execution) {
+                    await this.executeInstructions(execution);
+                }
+
+                AiLogger.log('Instance terminated.');
+                await delay(3000);
+
+                // Repeat loop
+                await this.run();
+            }
+
+            if(this.last4Screenshot === this.lastScreenshot) {
+                Logger.log('Last 4 screenshots are identical. Reinitializing...');
+                const { spawn } = require('child_process');
+                const child = spawn(process.argv[0], process.argv.slice(1), {
+                    detached: true,
+                    stdio: 'inherit'
+                });
+                child.unref();
+                process.exit(0);
+            }
+
+        } catch (err) {
+            Logger.error(`Run loop error: ${err}`);
+            await delay(5000);
+            await this.run();
+        }
+    }
 }
 
-// Start browser automation client
 (async () => {
-	const client = new BrowserClient(BROWSER_URL, SESSION_COOKIE, SESSION_IDENTITY, API_KEY, AI_MODEL, NAME, GENDER, AGE, ADDRESS);
-	await client.start();
-	await client.run();
+    const client = new BrowserClient();
+    await client.start();
+    await client.run();
 })();
